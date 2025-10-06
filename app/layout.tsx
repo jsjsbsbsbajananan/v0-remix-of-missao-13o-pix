@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   description:
     "Desafio de 7 dias que ensina como gerar renda extra com o celular antes do Natal. Garanta seu 13º mesmo sem CLT!",
   generator: "v0.app",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
 }
 
 export default function RootLayout({

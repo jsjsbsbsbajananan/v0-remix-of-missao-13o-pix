@@ -73,7 +73,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const amount = body.amount ?? 29.9
+    const amountInReais = body.amount ?? 29.9
+    const amountInCents = Math.round(amountInReais * 100)
+
     const description = body.description ?? "Missão 13º no Pix - Acesso Vitalício"
     const client = body.client || {
       name: "Cliente",
@@ -82,20 +84,42 @@ export async function POST(request: NextRequest) {
       phone: "51999999999",
     }
 
-    // Webhook URL é opcional - se não configurado, o sistema usa polling para verificar o pagamento
+    if (!client.email || !client.phone) {
+      return NextResponse.json({ ok: false, error: "E-mail e telefone são obrigatórios" }, { status: 400 })
+    }
+
     const payload = {
-      amount: amount,
+      amount: amountInCents, // Send amount in cents
       description: description,
       webhook_url: process.env.WEBHOOK_URL || "",
-      client: client,
+      client: {
+        ...client,
+        phone: client.phone.replace(/\D/g, ""), // Remove non-numeric characters
+      },
       split: body.split || [],
     }
 
+    console.log("[v0] Creating payment with payload:", { ...payload, client: { ...payload.client, cpf: "***" } })
+
     const data = await createCashIn(payload)
+
+    console.log("[v0] Payment created successfully:", { identifier: data.identifier })
 
     return NextResponse.json({ ok: true, data })
   } catch (error: any) {
     console.error("[v0] Payment creation error:", error)
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
+
+    let errorMessage = error.message
+
+    if (error.message.includes("500")) {
+      errorMessage =
+        "Erro no servidor de pagamentos. Verifique suas credenciais da API ou tente novamente em alguns minutos."
+    } else if (error.message.includes("401") || error.message.includes("403")) {
+      errorMessage = "Credenciais da API inválidas. Verifique CLIENT_ID e CLIENT_SECRET."
+    } else if (error.message.includes("400")) {
+      errorMessage = "Dados do pagamento inválidos. Verifique o formato dos dados enviados."
+    }
+
+    return NextResponse.json({ ok: false, error: errorMessage }, { status: 500 })
   }
 }

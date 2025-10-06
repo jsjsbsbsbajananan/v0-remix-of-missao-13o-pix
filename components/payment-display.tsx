@@ -35,7 +35,7 @@ export function PaymentDisplay({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      console.error("[v0] Failed to copy:", error)
+      console.error("Failed to copy:", error)
     }
   }
 
@@ -53,7 +53,7 @@ export function PaymentDisplay({
           setPaymentStatus("paid")
         }
       } catch (error) {
-        console.error("[v0] Error checking payment:", error)
+        console.error("Error checking payment:", error)
       } finally {
         setChecking(false)
       }
@@ -145,7 +145,7 @@ export function PaymentDisplay({
             </div>
           </div>
           <div className="bg-white p-4 rounded-xl border-2 border-orange-200 shadow-md">
-            <code className="text-xs break-all block text-gray-700 font-mono">{pixCode}</code>
+            <code className="text-xs break-all block text-gray-700 font-mono leading-relaxed">{pixCode}</code>
           </div>
           <Button
             onClick={copyToClipboard}

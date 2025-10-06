@@ -95,6 +95,11 @@ function CheckoutModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
     setError(null)
 
     try {
+      const cleanPhone = whatsapp.replace(/\D/g, "")
+      if (cleanPhone.length < 10) {
+        throw new Error("Por favor, insira um número de WhatsApp válido")
+      }
+
       const response = await fetch("/api/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,18 +110,18 @@ function CheckoutModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
             name: email.split("@")[0] || "Cliente",
             cpf: "00000000000",
             email: email,
-            phone: whatsapp.replace(/\D/g, ""),
+            phone: cleanPhone,
           },
         }),
       })
 
-      const result = await response.json()
+      const data = await response.json() // Correctly assigning the response data to 'data'
 
-      if (!result.ok) {
-        throw new Error(result.error || "Erro ao criar pagamento")
+      if (!response.ok) {
+        // Check response.ok instead of result.ok
+        throw new Error(data.error || "Erro ao criar pagamento") // Use data.error
       }
 
-      const data = result.data
       const pixCode = data.pix_code ?? data.data?.pix_code ?? data.payload ?? null
       const qrBase64 = data.qr_base64 ?? data.data?.qr_base64 ?? null
       const identifier = data.identifier ?? data.data?.identifier ?? data.reference_id ?? null
@@ -132,7 +137,7 @@ function CheckoutModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       })
       setShowForm(false)
     } catch (err: any) {
-      console.error("[v0] Payment error:", err)
+      console.error("[v0] Checkout error:", err)
       setError(err.message || "Erro ao processar pagamento. Tente novamente.")
     } finally {
       setIsProcessing(false)
@@ -706,7 +711,7 @@ export default function MissaoPix() {
         </div>
       </section>
 
-      <section className="px-4 py-24">
+      <section className="px-4 py-24 bg-gradient-to-br from-pix-light/10 via-background to-pix-green/5">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 rounded-full bg-pix-green/10 px-6 py-3 text-sm font-semibold text-pix-green mb-6">
